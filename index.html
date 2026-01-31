@@ -45,9 +45,9 @@
     </div>
     <div id="totalDisplay" style="margin-top:5px; font-size:0.9rem; color:#666;">合計：0名</div>
 
-    <label>詰所到着日時<span class="req">*</span></label>
+    <label>詰所到着予定日時<span class="req">*</span></label>
     <div class="flex-row"><input type="date" id="arrDate" onchange="generateMealTable()"><input type="time" id="arrTime"></div>
-    <label>詰所出発日時<span class="req">*</span></label>
+    <label>詰所出発予定日時<span class="req">*</span></label>
     <div class="flex-row"><input type="date" id="depDate" onchange="generateMealTable()"><input type="time" id="depTime"></div>
 
     <label>交通手段</label>
@@ -136,6 +136,13 @@
         document.getElementById('dateList').innerHTML = html + '</table>';
     }
 
+    // 西暦を消すための補助関数
+    function formatNoYear(dateStr) {
+        if (!dateStr) return "";
+        const d = new Date(dateStr);
+        return (d.getMonth() + 1) + "月" + d.getDate() + "日";
+    }
+
     function showConfirm() {
         const req = ['church', 'repName', 'tel', 'arrDate', 'depDate'];
         if (req.some(id => !document.getElementById(id).value)) { alert('必須項目（*）を入力してください'); return; }
@@ -159,13 +166,13 @@
                 <tr><th>代表者</th><td>${document.getElementById('repName').value}</td></tr>
                 <tr><th>連絡先</th><td>${document.getElementById('tel').value}</td></tr>
                 <tr><th>合計人数</th><td>${a+c+b}名 (大${a}/子${c}/乳${b})</td></tr>
-                <tr><th>到着</th><td>${document.getElementById('arrDate').value} ${document.getElementById('arrTime').value}</td></tr>
-                <tr><th>出発</th><td>${document.getElementById('depDate').value} ${document.getElementById('depTime').value}</td></tr>
+                <tr><th>到着</th><td>${formatNoYear(document.getElementById('arrDate').value)} ${document.getElementById('arrTime').value}</td></tr>
+                <tr><th>出発</th><td>${formatNoYear(document.getElementById('depDate').value)} ${document.getElementById('depTime').value}</td></tr>
                 <tr><th>交通手段</th><td>${document.getElementById('transportMain').value}-${document.getElementById('transportSub').value}${carStr}</td></tr>
             </table>
             <h4 style="margin:15px 0 5px;">【食事・宿泊明細】</h4>
             <table><tr><th>日付</th><th>朝食</th><th>昼食</th><th>夕食</th><th>宿泊</th></tr>${mRows}</table>
-            <p style="color:red; font-weight:bold; margin-top:10px; border:1px solid red; padding:5px;">直属食券: ${document.getElementById('ticketDate').value} / ${document.getElementById('ticketCount').value}枚</p>
+            <p style="color:red; font-weight:bold; margin-top:10px; border:1px solid red; padding:5px;">直属食券: ${formatNoYear(document.getElementById('ticketDate').value)} / ${document.getElementById('ticketCount').value}枚</p>
             <p style="text-align:left; font-size:0.9rem;">備考: ${document.getElementById('memo').value}</p>
         `;
         document.getElementById('inputPage').style.display = 'none';
