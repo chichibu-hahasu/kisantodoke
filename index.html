@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>帰参届 申込システム</title>
+    <title>帰参届システム</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --main-red: #e74c3c; --line-green: #06C755; }
@@ -14,20 +14,19 @@
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9rem; }
         .req { color: red; margin-left: 5px; }
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
-        .num-group { display: flex; gap: 10px; }
-        .num-group div { flex: 1; }
+        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .flex-row div { flex: 1; }
         .red-box { border: 2px solid var(--main-red); padding: 15px; border-radius: 8px; margin-top: 20px; }
-        .red-box h3 { color: var(--main-red); margin: 0 0 10px 0; font-size: 1.1rem; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 20px; }
         .btn-confirm { background: #34495e; color: white; }
         .btn-line { background: var(--line-green); color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        table, th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 0.9rem; }
         th { background: #eee; }
-        input[type="number"].meal-in { width: 50px; padding: 5px; text-align: center; }
+        input[type="number"].meal-in { width: 100%; padding: 5px; border: none; text-align: center; }
         #confirmPage { display: none; }
         .hidden { display: none; }
-        #canvas-container { margin-top: 20px; text-align: center; }
+        #captureArea { background: white; padding: 10px; }
     </style>
 </head>
 <body>
@@ -45,16 +44,22 @@
     <input type="tel" id="tel" placeholder="090-0000-0000" required>
 
     <label>人数（大人・子供・乳児）</label>
-    <div class="num-group">
+    <div class="flex-row">
         <div><small>大人</small><input type="number" id="pAdult" placeholder="0"></div>
         <div><small>子供</small><input type="number" id="pChild" placeholder="0"></div>
         <div><small>乳児</small><input type="number" id="pBaby" placeholder="0"></div>
     </div>
 
     <label>詰所到着日時<span class="req">*</span></label>
-    <input type="datetime-local" id="arrival" onchange="generateMealTable()" required>
+    <div class="flex-row">
+        <input type="date" id="arrDate" onchange="generateMealTable()">
+        <input type="time" id="arrTime">
+    </div>
     <label>詰所出発日時<span class="req">*</span></label>
-    <input type="datetime-local" id="departure" onchange="generateMealTable()" required>
+    <div class="flex-row">
+        <input type="date" id="depDate" onchange="generateMealTable()">
+        <input type="time" id="depTime">
+    </div>
 
     <label>交通手段</label>
     <select id="transportMain" onchange="toggleTransport()">
@@ -64,10 +69,7 @@
     </select>
     
     <div id="transSubArea" class="hidden">
-        <label>詳細種別</label>
-        <select id="transportSub" onchange="toggleCarNum()">
-            <option value="">詳細を選択</option>
-            </select>
+        <select id="transportSub" onchange="toggleCarNum()" style="margin-top:10px;"></select>
     </div>
     
     <div id="carNumArea" class="hidden">
@@ -76,13 +78,12 @@
     </div>
 
     <h2>食事・宿泊</h2>
-    <div id="dateList">到着・出発日時を入力すると表示されます</div>
+    <div id="dateList">日付を入力すると表が表示されます</div>
 
     <div class="red-box">
-        <h3 style="color:red;">直属食券申込</h3>
-        <p style="font-size: 0.7rem; color: #666;">※直属食券が発行される日、申込〆切日をよくご確認ください。</p>
-        <div class="num-group">
-            <div><small>日付</small><input type="text" id="ticketDate" placeholder="例：25日"></div>
+        <h3 style="color:red; margin:0 0 10px;">直属食券申込</h3>
+        <div class="flex-row">
+            <div><small>日付</small><input type="date" id="ticketDate"></div>
             <div><small>食数</small><input type="number" id="ticketCount" placeholder="0"></div>
         </div>
     </div>
@@ -95,12 +96,14 @@
 
 <div id="confirmPage" class="container">
     <div id="captureArea">
-        <h1 style="background:#f8f9fa; padding:10px;">帰参届</h1>
+        <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">帰参届</h1>
         <div id="summaryTable"></div>
     </div>
-    <div id="canvas-container"></div>
-    <button class="btn btn-line" onclick="sendLine()">この内容をLINEで送る</button>
-    <button class="btn" onclick="location.reload()" style="background:#ccc;">修正する</button>
+    <p style="text-align:center; font-size:0.8rem; color:#666; margin-top:20px;">
+        ☝️この内容をスクリーンショットして<br>下のボタンからLINEを送ってください。
+    </p>
+    <button class="btn btn-line" onclick="sendLine()">LINEを開く</button>
+    <button class="btn" onclick="goBack()" style="background:#ccc;">修正する</button>
 </div>
 
 <script>
@@ -109,16 +112,13 @@
         const sub = document.getElementById('transportSub');
         const subArea = document.getElementById('transSubArea');
         sub.innerHTML = '<option value="">詳細を選択</option>';
-        
         if (main === "公共交通") {
             subArea.classList.remove('hidden');
             ['電車', 'バス'].forEach(v => sub.innerHTML += `<option value="${v}">${v}</option>`);
         } else if (main === "独自") {
             subArea.classList.remove('hidden');
             ['観光バス', 'マイクロバス', '自家用車', '他'].forEach(v => sub.innerHTML += `<option value="${v}">${v}</option>`);
-        } else {
-            subArea.classList.add('hidden');
-        }
+        } else { subArea.classList.add('hidden'); }
         toggleCarNum();
     }
 
@@ -130,8 +130,8 @@
     }
 
     function generateMealTable() {
-        const start = new Date(document.getElementById('arrival').value);
-        const end = new Date(document.getElementById('departure').value);
+        const start = new Date(document.getElementById('arrDate').value);
+        const end = new Date(document.getElementById('depDate').value);
         const list = document.getElementById('dateList');
         if (isNaN(start) || isNaN(end)) return;
 
@@ -149,30 +149,20 @@
         list.innerHTML = html + '</table>';
     }
 
-    async function showConfirm() {
-        const requiredFields = ['church', 'repName', 'tel', 'arrival', 'departure'];
-        for (let id of requiredFields) {
-            if (!document.getElementById(id).value) { alert('必須項目（*）を入力してください'); return; }
-        }
+    function showConfirm() {
+        const req = ['church', 'repName', 'tel', 'arrDate', 'depDate'];
+        if (req.some(id => !document.getElementById(id).value)) { alert('必須項目（*）を入力してください'); return; }
 
         const adult = Number(document.getElementById('pAdult').value || 0);
         const child = Number(document.getElementById('pChild').value || 0);
         const baby = Number(document.getElementById('pBaby').value || 0);
-        const total = adult + child + baby;
-
-        const formatDate = (str) => {
-            if(!str) return "";
-            const d = new Date(str);
-            return `${d.getMonth()+1}月${d.getDate()}日 ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-        };
-
+        
         let mealRows = "";
         document.querySelectorAll('#dateList tr').forEach((tr, i) => {
             if(i === 0) return;
             const cells = tr.querySelectorAll('td');
-            const date = cells[0].innerText;
             const vals = Array.from(tr.querySelectorAll('input')).map(input => input.value || "0");
-            mealRows += `<tr><td>${date}</td><td>${vals[0]}</td><td>${vals[1]}</td><td>${vals[2]}</td><td>${vals[3]}</td></tr>`;
+            mealRows += `<tr><td>${cells[0].innerText}</td><td>${vals[0]}</td><td>${vals[1]}</td><td>${vals[2]}</td><td>${vals[3]}</td></tr>`;
         });
 
         const carStr = document.getElementById('transportSub').value === "自家用車" ? ` (${document.getElementById('carNum').value}台)` : "";
@@ -182,36 +172,31 @@
                 <tr><th>教会名</th><td>${document.getElementById('church').value}</td></tr>
                 <tr><th>代表者</th><td>${document.getElementById('repName').value}</td></tr>
                 <tr><th>連絡先</th><td>${document.getElementById('tel').value}</td></tr>
-                <tr><th>合計人数</th><td>${total}名 (大${adult}/子${child}/乳${baby})</td></tr>
-                <tr><th>到着</th><td>${formatDate(document.getElementById('arrival').value)}</td></tr>
-                <tr><th>出発</th><td>${formatDate(document.getElementById('departure').value)}</td></tr>
+                <tr><th>合計人数</th><td>${adult+child+baby}名 (大${adult}/子${child}/乳${baby})</td></tr>
+                <tr><th>到着</th><td>${document.getElementById('arrDate').value} ${document.getElementById('arrTime').value}</td></tr>
+                <tr><th>出発</th><td>${document.getElementById('depDate').value} ${document.getElementById('depTime').value}</td></tr>
                 <tr><th>交通</th><td>${document.getElementById('transportMain').value} - ${document.getElementById('transportSub').value}${carStr}</td></tr>
             </table>
-            <h4 style="margin:10px 0 5px;">【食事・宿泊数】</h4>
+            <h4 style="margin:15px 0 5px;">【食事・宿泊数】</h4>
             <table><tr><th>日付</th><th>朝食</th><th>昼食</th><th>夕食</th><th>宿泊</th></tr>${mealRows}</table>
             <p style="color:red; font-weight:bold; margin-top:10px;">直属食券: ${document.getElementById('ticketDate').value} (${document.getElementById('ticketCount').value}枚)</p>
-            <p style="text-align:left; font-size:0.9rem;">備考: ${document.getElementById('memo').value}</p>
+            <p style="text-align:left; font-size:0.9rem; border-top:1px solid #eee; padding-top:10px;">備考: ${document.getElementById('memo').value}</p>
         `;
 
         document.getElementById('inputPage').style.display = 'none';
         document.getElementById('confirmPage').style.display = 'block';
+        window.scrollTo(0,0);
+    }
 
-        // 確認ページを画像化してプレビュー表示
-        const canvas = await html2canvas(document.getElementById('captureArea'));
-        const container = document.getElementById('canvas-container');
-        container.innerHTML = "☝️ この内容を送信します<br>";
-        container.appendChild(canvas);
-        window.tempImage = canvas.toDataURL("image/png");
+    function goBack() {
+        document.getElementById('confirmPage').style.display = 'none';
+        document.getElementById('inputPage').style.display = 'block';
     }
 
     function sendLine() {
-        const text = "【帰参届】の申込を送信します。画像をご確認ください。";
-        // LINEにはテキストを送り、画像は別途「画像を長押しして保存→LINEで送信」するか
-        // ここでは仕様上、情報を整理したテキストをセットして送ります。
-        const lineUrl = `https://line.me/R/share?text=${encodeURIComponent(text + "\n" + document.getElementById('summaryTable').innerText)}`;
-        window.location.href = lineUrl;
+        const text = "【帰参届】を送信します。スクリーンショットをご確認ください。";
+        window.location.href = `https://line.me/R/share?text=${encodeURIComponent(text)}`;
     }
 </script>
-
 </body>
 </html>
