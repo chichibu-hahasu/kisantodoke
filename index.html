@@ -12,43 +12,55 @@
         h1 { text-align: center; font-size: 2.2rem; margin-bottom: 20px; color: #333; }
         label { display: block; margin-top: 15px; font-weight: bold; font-size: 0.9rem; }
         .req { color: red; margin-left: 5px; }
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 1rem; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
         .flex-row { display: flex; gap: 10px; align-items: center; }
         .flex-row div { flex: 1; }
         .red-box { border: 2px solid var(--main-red); padding: 15px; border-radius: 8px; margin-top: 20px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
         .btn-confirm { background: #34495e; color: white; }
-        .btn-image { background: #e67e22; color: white; }
         .btn-line { background: var(--line-green); color: white; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; font-size: 0.9rem; }
         th { background: #eee; }
-        input[type="number"] { text-align: center; }
-        #confirmPage, #imageResultPage { display: none; }
+        input[type="number"] { text-align: center; border: none; background: transparent; width: 100%; height: 100%; }
+        #confirmPage { display: none; }
         .hidden { display: none; }
-        #captureArea { background: white; padding: 20px; border: 1px solid #eee; }
-        .result-img { width: 100%; border: 2px solid #333; margin-top: 10px; }
+        #captureArea { background: white; padding: 20px; }
+        .total-badge { background: #eee; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem; margin-top: 5px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div id="inputPage" class="container">
     <h1>帰参届</h1>
-    <label>教会名（団体名）<span class="req">*</span></label><input type="text" id="church">
-    <label>帰参者名（代表）<span class="req">*</span></label><input type="text" id="repName">
-    <label>連絡先<span class="req">*</span></label><input type="tel" id="tel">
     
-    <label>人数</label>
+    <label>教会名（団体名）<span class="req">*</span></label>
+    <input type="text" id="church">
+
+    <label>帰参者名（代表）<span class="req">*</span></label>
+    <input type="text" id="repName">
+
+    <label>連絡先<span class="req">*</span></label>
+    <input type="tel" id="tel" placeholder="090-0000-0000">
+
+    <label>人数（大人・子供・乳児）</label>
     <div class="flex-row">
-        <div><small>大人</small><input type="number" id="pAdult" placeholder="0"></div>
-        <div><small>子供</small><input type="number" id="pChild" placeholder="0"></div>
-        <div><small>乳児</small><input type="number" id="pBaby" placeholder="0"></div>
+        <div><small>大人</small><input type="number" id="pAdult" oninput="calcTotal()"></div>
+        <div><small>子供</small><input type="number" id="pChild" oninput="calcTotal()"></div>
+        <div><small>乳児</small><input type="number" id="pBaby" oninput="calcTotal()"></div>
     </div>
+    <div id="totalDisplay" class="total-badge">合計：0名</div>
 
     <label>詰所到着日時<span class="req">*</span></label>
-    <div class="flex-row"><input type="date" id="arrDate" onchange="generateMealTable()"><input type="time" id="arrTime"></div>
+    <div class="flex-row">
+        <input type="date" id="arrDate" onchange="generateMealTable()">
+        <input type="time" id="arrTime">
+    </div>
     <label>詰所出発日時<span class="req">*</span></label>
-    <div class="flex-row"><input type="date" id="depDate" onchange="generateMealTable()"><input type="time" id="depTime"></div>
+    <div class="flex-row">
+        <input type="date" id="depDate" onchange="generateMealTable()">
+        <input type="time" id="depTime">
+    </div>
 
     <label>交通手段</label>
     <select id="transportMain" onchange="toggleTransport()">
@@ -69,29 +81,31 @@
             <div><small>食数</small><input type="number" id="ticketCount"></div>
         </div>
     </div>
-    <label>備考</label><textarea id="memo" rows="3" placeholder="女性部屋希望等ありましたらご記入下さい。"></textarea>
+
+    <label>備考</label>
+    <textarea id="memo" rows="3" placeholder="女性部屋希望等ありましたらご記入下さい。"></textarea>
+
     <button class="btn btn-confirm" onclick="showConfirm()">確認ページへ</button>
 </div>
 
 <div id="confirmPage" class="container">
     <div id="captureArea">
-        <h1 style="border-bottom: 3px solid #333; padding-bottom: 10px;">帰参届</h1>
+        <h1 style="border-bottom: 3px solid #333; padding-bottom: 10px; text-align: center;">帰参届</h1>
         <div id="summaryTable"></div>
     </div>
-    <button class="btn btn-image" onclick="makeScreenshot()">画像を生成する</button>
+    <div id="autoImageArea" style="text-align:center;"></div>
+    <button class="btn btn-line" onclick="sendLine()">LINEを開く</button>
     <button class="btn" onclick="goBack()" style="background:#ccc;">修正する</button>
 </div>
 
-<div id="imageResultPage" class="container">
-    <h1>送信用画像</h1>
-    <p style="font-size:0.9rem; color:#e67e22; font-weight:bold;">画像を長押しして保存、またはこの画面をスクショしてLINEで送ってください。</p>
-    <div id="imageDisplay"></div>
-    <button class="btn btn-line" onclick="sendLine()">LINEを開く</button>
-    <button class="btn" onclick="backToConfirm()" style="background:#ccc;">戻る</button>
-</div>
-
 <script>
-    // 交通・食事テーブル等のロジックは前回同様
+    function calcTotal() {
+        const a = Number(document.getElementById('pAdult').value || 0);
+        const c = Number(document.getElementById('pChild').value || 0);
+        const b = Number(document.getElementById('pBaby').value || 0);
+        document.getElementById('totalDisplay').innerText = `合計：${a + c + b}名`;
+    }
+
     function toggleTransport() {
         const main = document.getElementById('transportMain').value;
         const sub = document.getElementById('transportSub');
@@ -106,80 +120,85 @@
         } else { subArea.classList.add('hidden'); }
         toggleCarNum();
     }
+
     function toggleCarNum() {
         const sub = document.getElementById('transportSub').value;
         const carArea = document.getElementById('carNumArea');
         if (sub === "自家用車") carArea.classList.remove('hidden');
         else carArea.classList.add('hidden');
     }
+
     function generateMealTable() {
-        const startStr = document.getElementById('arrDate').value;
-        const endStr = document.getElementById('depDate').value;
-        if (!startStr || !endStr) return;
-        const start = new Date(startStr); const end = new Date(endStr);
+        const s = document.getElementById('arrDate').value;
+        const e = document.getElementById('depDate').value;
+        if (!s || !e) return;
+        const start = new Date(s); const end = new Date(e);
         let html = '<table><tr><th>日付</th><th>朝食</th><th>昼食</th><th>夕食</th><th>宿泊</th></tr>';
         let curr = new Date(start);
         while (curr <= end) {
             const d = (curr.getMonth()+1) + '/' + curr.getDate();
-            html += `<tr><td>${d}</td><td><input type="number" class="meal-in"></td><td><input type="number" class="meal-in"></td><td><input type="number" class="meal-in"></td><td><input type="number" class="meal-in"></td></tr>`;
+            html += `<tr><td>${d}</td><td><input type="number" class="m-in"></td><td><input type="number" class="m-in"></td><td><input type="number" class="m-in"></td><td><input type="number" class="m-in"></td></tr>`;
             curr.setDate(curr.getDate() + 1);
         }
         document.getElementById('dateList').innerHTML = html + '</table>';
     }
 
-    function showConfirm() {
+    async function showConfirm() {
         const req = ['church', 'repName', 'tel', 'arrDate', 'depDate'];
         if (req.some(id => !document.getElementById(id).value)) { alert('必須項目（*）を入力してください'); return; }
+
+        const a = Number(document.getElementById('pAdult').value || 0);
+        const c = Number(document.getElementById('pChild').value || 0);
+        const b = Number(document.getElementById('pBaby').value || 0);
         
-        const adult = Number(document.getElementById('pAdult').value || 0);
-        const child = Number(document.getElementById('pChild').value || 0);
-        const baby = Number(document.getElementById('pBaby').value || 0);
-        
-        let mealRows = "";
+        let mRows = "";
         document.querySelectorAll('#dateList tr').forEach((tr, i) => {
             if(i === 0) return;
-            const vals = Array.from(tr.querySelectorAll('input')).map(input => input.value || "0");
-            mealRows += `<tr><td>${tr.cells[0].innerText}</td><td>${vals[0]}</td><td>${vals[1]}</td><td>${vals[2]}</td><td>${vals[3]}</td></tr>`;
+            const v = Array.from(tr.querySelectorAll('input')).map(inp => inp.value || "0");
+            mRows += `<tr><td>${tr.cells[0].innerText}</td><td>${v[0]}</td><td>${v[1]}</td><td>${v[2]}</td><td>${v[3]}</td></tr>`;
         });
+
+        const carStr = document.getElementById('transportSub').value === "自家用車" ? ` (${document.getElementById('carNum').value}台)` : "";
 
         document.getElementById('summaryTable').innerHTML = `
             <table>
                 <tr><th>教会名</th><td>${document.getElementById('church').value}</td></tr>
                 <tr><th>代表者</th><td>${document.getElementById('repName').value}</td></tr>
-                <tr><th>人数</th><td>${adult+child+baby}名 (大${adult}/子${child}/乳${baby})</td></tr>
+                <tr><th>連絡先</th><td>${document.getElementById('tel').value}</td></tr>
+                <tr><th>合計人数</th><td>${a+c+b}名 (大${a}/子${c}/乳${b})</td></tr>
                 <tr><th>到着</th><td>${document.getElementById('arrDate').value} ${document.getElementById('arrTime').value}</td></tr>
                 <tr><th>出発</th><td>${document.getElementById('depDate').value} ${document.getElementById('depTime').value}</td></tr>
-                <tr><th>交通</th><td>${document.getElementById('transportMain').value}-${document.getElementById('transportSub').value}</td></tr>
+                <tr><th>交通手段</th><td>${document.getElementById('transportMain').value}-${document.getElementById('transportSub').value}${carStr}</td></tr>
             </table>
             <h4 style="margin:15px 0 5px;">【食事・宿泊明細】</h4>
-            <table><tr><th>日付</th><th>朝食</th><th>昼食</th><th>夕食</th><th>宿泊</th></tr>${mealRows}</table>
+            <table><tr><th>日付</th><th>朝食</th><th>昼食</th><th>夕食</th><th>宿泊</th></tr>${mRows}</table>
             <p style="color:red; font-weight:bold; margin-top:10px; border:1px solid red; padding:5px;">直属食券: ${document.getElementById('ticketDate').value} / ${document.getElementById('ticketCount').value}枚</p>
-            <p style="text-align:left; font-size:0.9rem;">備考: ${document.getElementById('memo').value}</p>
+            <p style="text-align:left; font-size:0.9rem; margin-top:10px;">備考: ${document.getElementById('memo').value}</p>
         `;
+
         document.getElementById('inputPage').style.display = 'none';
         document.getElementById('confirmPage').style.display = 'block';
-    }
+        window.scrollTo(0,0);
 
-    // 画像生成ボタンの処理
-    async function makeScreenshot() {
+        // 確認画面を画像化
         const area = document.getElementById('captureArea');
-        const canvas = await html2canvas(area, {scale: 2}); // 高画質化
-        const imgData = canvas.toDataURL("image/png");
-        document.getElementById('imageDisplay').innerHTML = `<img src="${imgData}" class="result-img">`;
-        document.getElementById('confirmPage').style.display = 'none';
-        document.getElementById('imageResultPage').style.display = 'block';
+        const canvas = await html2canvas(area, {scale: 2});
+        const imgTag = document.createElement('img');
+        imgTag.src = canvas.toDataURL("image/png");
+        imgTag.style.width = "100%";
+        imgTag.style.border = "2px solid #333";
+        const target = document.getElementById('autoImageArea');
+        target.innerHTML = "<p style='color:orange; font-weight:bold;'>👇この画像を保存またはスクショ</p>";
+        target.appendChild(imgTag);
     }
 
-    function backToConfirm() {
-        document.getElementById('imageResultPage').style.display = 'none';
-        document.getElementById('confirmPage').style.display = 'block';
-    }
     function goBack() {
         document.getElementById('confirmPage').style.display = 'none';
         document.getElementById('inputPage').style.display = 'block';
     }
+
     function sendLine() {
-        window.location.href = `https://line.me/R/share?text=${encodeURIComponent("帰参届を送ります。画像を貼り付けてください。")}`;
+        window.location.href = `https://line.me/R/share?text=${encodeURIComponent("帰参届を送信します。画像を貼り付けてください。")}`;
     }
 </script>
 </body>
