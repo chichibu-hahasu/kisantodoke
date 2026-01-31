@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>帰参届システム</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root { --main-red: #e74c3c; --line-green: #06C755; }
         body { font-family: sans-serif; background: #f4f7f6; padding: 15px; margin: 0; }
@@ -17,7 +16,7 @@
         .flex-row { display: flex; gap: 10px; align-items: center; }
         .flex-row div { flex: 1; }
         .red-box { border: 2px solid var(--main-red); padding: 15px; border-radius: 8px; margin-top: 20px; }
-        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 15px; }
         .btn-confirm { background: #34495e; color: white; }
         .btn-line { background: var(--line-green); color: white; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -27,6 +26,8 @@
         #confirmPage { display: none; }
         .hidden { display: none; }
         #captureArea { background: white; padding: 10px; }
+        /* 確認画面専用スタイル */
+        .confirm-title { text-align: center; border-bottom: 3px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -96,12 +97,9 @@
 
 <div id="confirmPage" class="container">
     <div id="captureArea">
-        <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">帰参届</h1>
+        <h1 class="confirm-title">帰参届</h1>
         <div id="summaryTable"></div>
     </div>
-    <p style="text-align:center; font-size:0.8rem; color:#666; margin-top:20px;">
-        ☝️この内容をスクリーンショットして<br>下のボタンからLINEを送ってください。
-    </p>
     <button class="btn btn-line" onclick="sendLine()">LINEを開く</button>
     <button class="btn" onclick="goBack()" style="background:#ccc;">修正する</button>
 </div>
@@ -130,20 +128,22 @@
     }
 
     function generateMealTable() {
-        const start = new Date(document.getElementById('arrDate').value);
-        const end = new Date(document.getElementById('depDate').value);
+        const startStr = document.getElementById('arrDate').value;
+        const endStr = document.getElementById('depDate').value;
+        if (!startStr || !endStr) return;
+        const start = new Date(startStr);
+        const end = new Date(endStr);
         const list = document.getElementById('dateList');
-        if (isNaN(start) || isNaN(end)) return;
 
         let html = '<table><tr><th>日付</th><th>朝食</th><th>昼食</th><th>夕食</th><th>宿泊</th></tr>';
         let curr = new Date(start);
         while (curr <= end) {
             const d = (curr.getMonth()+1) + '/' + curr.getDate();
             html += `<tr><td>${d}</td>
-                <td><input type="number" class="meal-in" data-date="${d}" data-type="朝食"></td>
-                <td><input type="number" class="meal-in" data-date="${d}" data-type="昼食"></td>
-                <td><input type="number" class="meal-in" data-date="${d}" data-type="夕食"></td>
-                <td><input type="number" class="meal-in" data-date="${d}" data-type="宿泊"></td></tr>`;
+                <td><input type="number" class="meal-in" data-date="${d}"></td>
+                <td><input type="number" class="meal-in" data-date="${d}"></td>
+                <td><input type="number" class="meal-in" data-date="${d}"></td>
+                <td><input type="number" class="meal-in" data-date="${d}"></td></tr>`;
             curr.setDate(curr.getDate() + 1);
         }
         list.innerHTML = html + '</table>';
@@ -161,8 +161,9 @@
         document.querySelectorAll('#dateList tr').forEach((tr, i) => {
             if(i === 0) return;
             const cells = tr.querySelectorAll('td');
+            const date = cells[0].innerText;
             const vals = Array.from(tr.querySelectorAll('input')).map(input => input.value || "0");
-            mealRows += `<tr><td>${cells[0].innerText}</td><td>${vals[0]}</td><td>${vals[1]}</td><td>${vals[2]}</td><td>${vals[3]}</td></tr>`;
+            mealRows += `<tr><td>${date}</td><td>${vals[0]}</td><td>${vals[1]}</td><td>${vals[2]}</td><td>${vals[3]}</td></tr>`;
         });
 
         const carStr = document.getElementById('transportSub').value === "自家用車" ? ` (${document.getElementById('carNum').value}台)` : "";
@@ -173,14 +174,14 @@
                 <tr><th>代表者</th><td>${document.getElementById('repName').value}</td></tr>
                 <tr><th>連絡先</th><td>${document.getElementById('tel').value}</td></tr>
                 <tr><th>合計人数</th><td>${adult+child+baby}名 (大${adult}/子${child}/乳${baby})</td></tr>
-                <tr><th>到着</th><td>${document.getElementById('arrDate').value} ${document.getElementById('arrTime').value}</td></tr>
-                <tr><th>出発</th><td>${document.getElementById('depDate').value} ${document.getElementById('depTime').value}</td></tr>
-                <tr><th>交通</th><td>${document.getElementById('transportMain').value} - ${document.getElementById('transportSub').value}${carStr}</td></tr>
+                <tr><th>到着日時</th><td>${document.getElementById('arrDate').value} ${document.getElementById('arrTime').value}</td></tr>
+                <tr><th>出発日時</th><td>${document.getElementById('depDate').value} ${document.getElementById('depTime').value}</td></tr>
+                <tr><th>交通手段</th><td>${document.getElementById('transportMain').value} - ${document.getElementById('transportSub').value}${carStr}</td></tr>
             </table>
-            <h4 style="margin:15px 0 5px;">【食事・宿泊数】</h4>
+            <h4 style="margin:20px 0 5px;">【食事・宿泊明細】</h4>
             <table><tr><th>日付</th><th>朝食</th><th>昼食</th><th>夕食</th><th>宿泊</th></tr>${mealRows}</table>
-            <p style="color:red; font-weight:bold; margin-top:10px;">直属食券: ${document.getElementById('ticketDate').value} (${document.getElementById('ticketCount').value}枚)</p>
-            <p style="text-align:left; font-size:0.9rem; border-top:1px solid #eee; padding-top:10px;">備考: ${document.getElementById('memo').value}</p>
+            <p style="color:red; font-weight:bold; margin-top:15px; border: 1px solid red; padding: 5px;">直属食券: ${document.getElementById('ticketDate').value} / ${document.getElementById('ticketCount').value}枚</p>
+            <p style="text-align:left; font-size:0.9rem; margin-top:10px;">備考: ${document.getElementById('memo').value}</p>
         `;
 
         document.getElementById('inputPage').style.display = 'none';
@@ -194,8 +195,7 @@
     }
 
     function sendLine() {
-        const text = "【帰参届】を送信します。スクリーンショットをご確認ください。";
-        window.location.href = `https://line.me/R/share?text=${encodeURIComponent(text)}`;
+        window.location.href = `https://line.me/R/share?text=${encodeURIComponent("帰参届の申し込み内容を（画像で）送信します。")}`;
     }
 </script>
 </body>
