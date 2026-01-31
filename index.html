@@ -69,7 +69,10 @@
             <div><small>食数</small><input type="number" id="ticketCount"></div>
         </div>
     </div>
-    <label>備考</label><textarea id="memo" rows="3" placeholder="女性部屋希望等ありましたらご記入下さい。"></textarea>
+    
+    <label>備考</label>
+    <textarea id="memo" rows="3" placeholder="女性部屋希望、別席・願書等ある方もこちらにご記入下さい。"></textarea>
+
     <button class="btn btn-confirm" onclick="showConfirm()">確認ページへ</button>
 </div>
 
@@ -157,7 +160,6 @@
             mRows += `<tr><td>${tr.cells[0].innerText}</td><td>${v[0]}</td><td>${v[1]}</td><td>${v[2]}</td><td>${v[3]}</td></tr>`;
         });
 
-        // 直属食券の表示判定
         const tDate = document.getElementById('ticketDate').value;
         const tCount = document.getElementById('ticketCount').value;
         let ticketHTML = "";
